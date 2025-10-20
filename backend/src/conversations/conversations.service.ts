@@ -8,12 +8,14 @@ import {
   Conversation,
   ConversationDocument,
 } from './schemas/conversation.schema';
+import { RagWorkflow } from '../rag/rag-workflow';
 
 @Injectable()
 export class ConversationsService {
   constructor(
     @InjectModel(Conversation.name)
     private conversationModel: Model<ConversationDocument>,
+    private ragWorkflow: RagWorkflow,
   ) {}
 
   async create(createConversationDto: CreateConversationDto) {
@@ -73,7 +75,8 @@ export class ConversationsService {
       sender: addMessageDto.sender,
     };
 
-    const conversation = await this.conversationModel
+    // First, add the user message to the conversation
+    let conversation = await this.conversationModel
       .findByIdAndUpdate(
         id,
         {
@@ -88,6 +91,70 @@ export class ConversationsService {
       throw new NotFoundException('Conversation not found');
     }
 
+    // If the message is from a user, generate an AI response using RAG
+    if (addMessageDto.sender === 'User') {
+      try {
+        // Run the RAG workflow to generate a response
+        const ragResult = await this.ragWorkflow.run(
+          addMessageDto.content,
+          conversation.messages,
+        );
+
+        // Create the AI response message
+        const aiMessage = {
+          content: ragResult.response,
+          sender: 'AI',
+        };
+
+        // Add the AI response to the conversation
+        conversation = await this.conversationModel
+          .findByIdAndUpdate(
+            id,
+            {
+              $push: { messages: aiMessage },
+              $set: { updatedAt: new Date() },
+            },
+            { new: true },
+          )
+          .exec();
+
+        return {
+          userMessage: newMessage,
+          aiMessage: aiMessage,
+          conversation: conversation?.toObject(),
+          retrievedDocuments: ragResult.retrievedDocuments,
+        };
+      } catch (error) {
+        console.error('Error generating AI response:', error);
+
+        // If RAG fails, add a fallback message
+        const fallbackMessage = {
+          content:
+            "I apologize, but I'm having trouble processing your request right now. Please try again later.",
+          sender: 'AI',
+        };
+
+        conversation = await this.conversationModel
+          .findByIdAndUpdate(
+            id,
+            {
+              $push: { messages: fallbackMessage },
+              $set: { updatedAt: new Date() },
+            },
+            { new: true },
+          )
+          .exec();
+
+        return {
+          userMessage: newMessage,
+          aiMessage: fallbackMessage,
+          conversation: conversation?.toObject(),
+          retrievedDocuments: [],
+        };
+      }
+    }
+
+    // If not a user message, just return the original message
     return {
       message: newMessage,
       conversation: conversation.toObject(),

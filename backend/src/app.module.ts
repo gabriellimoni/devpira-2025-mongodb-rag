@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConversationsModule } from './conversations/conversations.module';
 import { EmbeddingProcessorModule } from './embedding-processor/embedding-processor.module';
+import { RagModule } from './rag/rag.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { EmbeddingProcessorModule } from './embedding-processor/embedding-proces
     }),
     ConversationsModule,
     EmbeddingProcessorModule,
+    RagModule,
   ],
   controllers: [AppController],
   providers: [AppService],
