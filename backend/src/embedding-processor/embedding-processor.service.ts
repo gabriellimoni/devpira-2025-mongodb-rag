@@ -16,12 +16,24 @@ export class EmbeddingProcessorService implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    this.productReviewModel.watch().on('change', (data) => {
+    this.productReviewModel.watch().on('change', async (data) => {
       // Only process insertions
       if (data.operationType !== 'insert') return;
 
       const productReview = data.fullDocument;
       console.log(productReview);
+      await this.processProductReview(productReview);
     });
+  }
+
+  async processProductReview(productReview: ProductReviewDocument) {
+    const embedding = await this.generateEmbedding(productReview);
+    await this.productReviewModel.findByIdAndUpdate(productReview._id, {
+      embedding,
+    });
+  }
+
+  async generateEmbedding(productReview: ProductReviewDocument) {
+    return [1, 2, 3, 4, 5];
   }
 }

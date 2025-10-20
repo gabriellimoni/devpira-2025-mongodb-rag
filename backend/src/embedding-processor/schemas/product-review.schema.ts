@@ -16,6 +16,9 @@ export class ProductReview {
 
   @Prop({ default: Date.now })
   createdAt: Date;
+
+  @Prop({ required: false })
+  embedding: number[];
 }
 
 export const ProductReviewSchema = SchemaFactory.createForClass(ProductReview);
