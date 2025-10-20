@@ -12,12 +12,14 @@ import { EmbeddingProcessorModule } from './embedding-processor/embedding-proces
       isGlobal: true,
       envFilePath: '.env',
     }),
-    // MongooseModule.forRootAsync({
-    //   useFactory: (configService) => ({
-    //     uri: configService.get('MONGODB_URI') || 'mongodb://localhost:27017/rag-chat',
-    //   }),
-    //   inject: [ConfigService],
-    // }),
+    MongooseModule.forRootAsync({
+      useFactory: (configService) => ({
+        uri:
+          configService.get('MONGODB_URI') ||
+          'mongodb://localhost:27017/rag-chat',
+      }),
+      inject: [ConfigService],
+    }),
     ConversationsModule,
     EmbeddingProcessorModule,
   ],

@@ -7,6 +7,7 @@ import {
   Param,
   HttpException,
   HttpStatus,
+  NotFoundException,
 } from '@nestjs/common';
 import { ConversationsService } from './conversations.service';
 import { CreateConversationDto } from './dto/create-conversation.dto';
@@ -18,9 +19,9 @@ export class ConversationsController {
   constructor(private readonly conversationsService: ConversationsService) {}
 
   @Post()
-  create(@Body() createConversationDto: CreateConversationDto) {
+  async create(@Body() createConversationDto: CreateConversationDto) {
     try {
-      return this.conversationsService.create(createConversationDto);
+      return await this.conversationsService.create(createConversationDto);
     } catch (error) {
       throw new HttpException(
         'Failed to create conversation',
@@ -30,9 +31,9 @@ export class ConversationsController {
   }
 
   @Get()
-  findAll() {
+  async findAll() {
     try {
-      return this.conversationsService.findAll();
+      return await this.conversationsService.findAll();
     } catch (error) {
       throw new HttpException(
         'Failed to fetch conversations',
@@ -42,13 +43,9 @@ export class ConversationsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string) {
     try {
-      const conversation = this.conversationsService.findOne(id);
-      if (!conversation) {
-        throw new HttpException('Conversation not found', HttpStatus.NOT_FOUND);
-      }
-      return conversation;
+      return await this.conversationsService.findOne(id);
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;
@@ -61,11 +58,14 @@ export class ConversationsController {
   }
 
   @Post(':id/messages')
-  addMessage(@Param('id') id: string, @Body() addMessageDto: AddMessageDto) {
+  async addMessage(
+    @Param('id') id: string,
+    @Body() addMessageDto: AddMessageDto,
+  ) {
     try {
-      return this.conversationsService.addMessage(id, addMessageDto);
+      return await this.conversationsService.addMessage(id, addMessageDto);
     } catch (error) {
-      if (error.message === 'Conversation not found') {
+      if (error instanceof NotFoundException) {
         throw new HttpException('Conversation not found', HttpStatus.NOT_FOUND);
       }
       throw new HttpException(
@@ -76,18 +76,14 @@ export class ConversationsController {
   }
 
   @Put(':id')
-  edit(
+  async edit(
     @Param('id') id: string,
     @Body() editConversationDto: EditConversationDto,
   ) {
     try {
-      const conversation = this.conversationsService.edit(
-        id,
-        editConversationDto,
-      );
-      return conversation;
+      return await this.conversationsService.edit(id, editConversationDto);
     } catch (error) {
-      if (error.message === 'Conversation not found') {
+      if (error instanceof NotFoundException) {
         throw new HttpException('Conversation not found', HttpStatus.NOT_FOUND);
       }
       throw new HttpException(

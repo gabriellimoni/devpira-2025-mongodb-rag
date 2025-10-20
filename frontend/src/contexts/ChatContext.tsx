@@ -12,7 +12,7 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 export function ChatProvider({ children }: { children: ReactNode }) {
   const [activeConversationId, setActiveConversationId] = useState<
     string | null
-  >("1");
+  >("");
 
   return (
     <ChatContext.Provider
