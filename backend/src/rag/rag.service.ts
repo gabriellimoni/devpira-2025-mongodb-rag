@@ -90,7 +90,7 @@ Response:
     }
   }
 
-  async searchRelevantReviews(query: string, limit: number = 5) {
+  async searchRelevantReviews(query: string, msgScore: number = 0.5) {
     try {
       const client = await getMongoClient();
       const db = client.db('rag-chat');
@@ -101,8 +101,17 @@ Response:
         embeddingKey: 'embedding',
         textKey: 'embeddingText',
       });
-      const results = await this.vectorStore.similaritySearch(query, limit);
-      return results;
+      const results = await this.vectorStore.similaritySearchWithScore(
+        query,
+        100,
+      );
+      const highScore = results
+        .filter(([_, score]) => score > msgScore)
+        .map(([doc]) => doc);
+      console.log('HIGH SCORE RESULTS COUNT:', highScore.length);
+      return highScore;
+      // const results = await this.vectorStore.similaritySearch(query, limit);
+      // return results;
     } catch (error) {
       this.logger.error('Error searching relevant reviews:', error);
       return [];

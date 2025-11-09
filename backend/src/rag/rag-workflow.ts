@@ -44,7 +44,7 @@ export class RagWorkflow {
     try {
       const relevantDocs = await this.ragService.searchRelevantReviews(
         state.userMessage,
-        50,
+        0.75,
       );
       return {
         retrievedDocuments: relevantDocs,
