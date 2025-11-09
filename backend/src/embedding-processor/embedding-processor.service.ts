@@ -44,9 +44,11 @@ export class EmbeddingProcessorService implements OnModuleInit {
   async processProductReview(productReview: ProductReviewDocument) {
     try {
       this.logger.log(`Processing product review: ${productReview._id}`);
-      const embedding = await this.generateEmbedding(productReview);
+      const { embeddingResult, textToEmbed } =
+        await this.generateEmbedding(productReview);
       await this.productReviewModel.findByIdAndUpdate(productReview._id, {
-        embedding,
+        embedding: embeddingResult,
+        embeddingText: textToEmbed,
       });
       this.logger.log(
         `Successfully processed and updated product review: ${productReview._id}`,
@@ -62,7 +64,7 @@ export class EmbeddingProcessorService implements OnModuleInit {
 
   async generateEmbedding(
     productReview: ProductReviewDocument,
-  ): Promise<number[]> {
+  ): Promise<{ embeddingResult: number[]; textToEmbed: string }> {
     try {
       this.logger.log(
         `Generating embedding for product review: ${productReview._id}`,
@@ -77,7 +79,7 @@ export class EmbeddingProcessorService implements OnModuleInit {
       this.logger.log(
         `Successfully generated embedding with ${embeddingResult.length} dimensions`,
       );
-      return embeddingResult;
+      return { embeddingResult, textToEmbed };
     } catch (error) {
       this.logger.error(
         `Failed to generate embedding for product review ${productReview._id}:`,

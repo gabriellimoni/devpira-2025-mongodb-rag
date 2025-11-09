@@ -59,21 +59,21 @@ export class RagService {
         collection: collection,
         indexName: 'product_reviews_index_embedding',
         embeddingKey: 'embedding',
-        textKey: 'reviewText',
+        textKey: 'embeddingText',
       });
 
       // Retrieve relevant documents using vector search
       const relevantDocs = await this.vectorStore.similaritySearch(
         userMessage,
-        5,
+        50,
       );
-      console.log(relevantDocs);
+      console.log(userMessage, relevantDocs);
 
       this.logger.log(`Found ${relevantDocs.length} relevant documents`);
 
       // Create context from retrieved documents
       const context = relevantDocs
-        .map((doc, index) => `Document ${index + 1}:\n${doc.pageContent}`)
+        .map((doc) => `${doc.pageContent}`)
         .join('\n\n');
 
       // Create conversation history context
@@ -81,6 +81,7 @@ export class RagService {
         .slice(-10) // Keep last 10 messages for context
         .map((msg) => `${msg.sender}: ${msg.content}`)
         .join('\n');
+      console.log(conversationContext);
 
       // Create prompt template
       const prompt = ChatPromptTemplate.fromTemplate(`
@@ -128,7 +129,7 @@ Response:
       this.vectorStore = new MongoDBAtlasVectorSearch(this.embeddings, {
         collection: collection,
         indexName: 'vector_index',
-        textKey: 'text',
+        textKey: 'embeddingText',
         embeddingKey: 'embedding',
       });
       const results = await this.vectorStore.similaritySearch(query, limit);

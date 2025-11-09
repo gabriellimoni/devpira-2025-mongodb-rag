@@ -347,7 +347,7 @@ function ChatInterface() {
             placeholder="Type message here"
             value={messageInputValue}
             onChange={(val) => setMessageInputValue(val)}
-            onSend={handleSend}
+            onSend={(_, text) => handleSend(text)}
             attachButton={false}
             disabled={!activeConversationId || addMessageMutation.isPending}
           />

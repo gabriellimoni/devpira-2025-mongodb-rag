@@ -19,6 +19,9 @@ export class ProductReview {
 
   @Prop({ required: false })
   embedding: number[];
+
+  @Prop({ required: false })
+  embeddingText: string;
 }
 
 export const ProductReviewSchema = SchemaFactory.createForClass(ProductReview);
