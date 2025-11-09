@@ -1,17 +1,11 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { ChatOpenAI, OpenAI } from '@langchain/openai';
-import { MongoDBAtlasVectorSearch } from '@langchain/mongodb';
-import { OpenAIEmbeddings } from '@langchain/openai';
-import {
-  ProductReview,
-  ProductReviewDocument,
-} from '../embedding-processor/schemas/product-review.schema';
-import { ChatPromptTemplate } from '@langchain/core/prompts';
+import { DocumentInterface } from '@langchain/core/documents';
 import { StringOutputParser } from '@langchain/core/output_parsers';
-import { MongoClient } from 'mongodb';
+import { ChatPromptTemplate } from '@langchain/core/prompts';
+import { MongoDBAtlasVectorSearch } from '@langchain/mongodb';
+import { ChatOpenAI, OpenAIEmbeddings } from '@langchain/openai';
+import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { getMongoClient } from 'src/mongo';
 
 @Injectable()
 export class RagService {
@@ -20,11 +14,7 @@ export class RagService {
   private vectorStore: MongoDBAtlasVectorSearch;
   private embeddings: OpenAIEmbeddings;
 
-  constructor(
-    @InjectModel(ProductReview.name)
-    private productReviewModel: Model<ProductReviewDocument>,
-    private configService: ConfigService,
-  ) {
+  constructor(private configService: ConfigService) {
     const openaiApiKey = this.configService.get<string>('OPENAI_API_KEY');
     if (!openaiApiKey) {
       throw new Error('OPENAI_API_KEY environment variable is required');
@@ -46,34 +36,15 @@ export class RagService {
 
   async generateResponse(
     userMessage: string,
-    conversationHistory: any[],
+    conversationHistory: { content: string; sender: string }[],
+    relevantDocs: DocumentInterface[],
   ): Promise<string> {
     try {
       this.logger.log('Generating RAG response for user message');
-      const client = await MongoClient.connect(
-        this.configService.get('MONGODB_URI') || '',
-      );
-      const db = client.db('rag-chat');
-      const collection = db.collection('productreviews');
-      this.vectorStore = new MongoDBAtlasVectorSearch(this.embeddings, {
-        collection: collection,
-        indexName: 'product_reviews_index_embedding',
-        embeddingKey: 'embedding',
-        textKey: 'embeddingText',
-      });
-
-      // Retrieve relevant documents using vector search
-      const relevantDocs = await this.vectorStore.similaritySearch(
-        userMessage,
-        50,
-      );
-      console.log(userMessage, relevantDocs);
-
-      this.logger.log(`Found ${relevantDocs.length} relevant documents`);
 
       // Create context from retrieved documents
       const context = relevantDocs
-        .map((doc) => `${doc.pageContent}`)
+        .map((doc) => `${doc.pageContent} | DB ID:${doc.metadata._id}`)
         .join('\n\n');
 
       // Create conversation history context
@@ -121,22 +92,17 @@ Response:
 
   async searchRelevantReviews(query: string, limit: number = 5) {
     try {
-      const client = await MongoClient.connect(
-        this.configService.get('MONGODB_URI') || '',
-      );
+      const client = await getMongoClient();
       const db = client.db('rag-chat');
       const collection = db.collection('productreviews');
       this.vectorStore = new MongoDBAtlasVectorSearch(this.embeddings, {
         collection: collection,
-        indexName: 'vector_index',
-        textKey: 'embeddingText',
+        indexName: 'product_reviews_index_embedding',
         embeddingKey: 'embedding',
+        textKey: 'embeddingText',
       });
       const results = await this.vectorStore.similaritySearch(query, limit);
-      return results.map((doc) => ({
-        content: doc.pageContent,
-        metadata: doc.metadata,
-      }));
+      return results;
     } catch (error) {
       this.logger.error('Error searching relevant reviews:', error);
       return [];

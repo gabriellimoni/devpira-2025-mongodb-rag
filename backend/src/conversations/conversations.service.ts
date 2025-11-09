@@ -1,14 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { CreateConversationDto } from './dto/create-conversation.dto';
+import { RagWorkflow } from '../rag/rag-workflow';
 import { AddMessageDto } from './dto/add-message.dto';
+import { CreateConversationDto } from './dto/create-conversation.dto';
 import { EditConversationDto } from './dto/edit-conversation.dto';
 import {
   Conversation,
   ConversationDocument,
 } from './schemas/conversation.schema';
-import { RagWorkflow } from '../rag/rag-workflow';
 
 @Injectable()
 export class ConversationsService {
@@ -122,7 +122,6 @@ export class ConversationsService {
           userMessage: newMessage,
           aiMessage: aiMessage,
           conversation: conversation?.toObject(),
-          retrievedDocuments: ragResult.retrievedDocuments,
         };
       } catch (error) {
         console.error('Error generating AI response:', error);
