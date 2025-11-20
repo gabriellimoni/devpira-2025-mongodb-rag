@@ -68,7 +68,6 @@ Regras:
 - Não invente informações
 - Cite trechos relevantes
 - Se não houver dados suficientes, diga isso explicitamente
-- Não repita trechos identicos ou parecidos - referencie os DB IDs
 `);
 
       // Create the chain
