@@ -25,8 +25,8 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 # Copy the standalone output from the builder stage
-COPY --from=builder /app/.next ./
-COPY --from=builder /app/public ./public
+COPY --from=builder /app/node_modules ./
+COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/package.json ./
 
 # Expose the port Next.js will run on
