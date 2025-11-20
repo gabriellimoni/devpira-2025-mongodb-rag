@@ -52,23 +52,23 @@ export class RagService {
         .slice(-10) // Keep last 10 messages for context
         .map((msg) => `${msg.sender}: ${msg.content}`)
         .join('\n');
-      console.log(conversationContext);
 
       // Create prompt template
       const prompt = ChatPromptTemplate.fromTemplate(`
-You are a helpful assistant that provides information based on product reviews and user conversations.
+Com base exclusivamente nos trechos de reviews abaixo, responda:
+{userMessage}
 
-Context from product reviews:
+Contexto:
 {context}
 
-Recent conversation history:
+Histórico de conversa recente:
 {conversationHistory}
 
-User's current message: {userMessage}
-
-Please provide a helpful response based on the context and conversation history. If the user is asking about products, use the review information to provide insights. Be conversational and helpful.
-
-Response:
+Regras:
+- Não invente informações
+- Cite trechos relevantes
+- Se não houver dados suficientes, diga isso explicitamente
+- Não repita trechos identicos ou parecidos - referencie os DB IDs
 `);
 
       // Create the chain
@@ -81,6 +81,9 @@ Response:
         userMessage,
       });
 
+      this.logger.log(`USER MESSAGE: ${userMessage}`);
+      this.logger.log(`CONTEXT: ${context}`);
+      this.logger.log(`CONVERSATION HISTORY: ${conversationContext}`);
       this.logger.log('Successfully generated RAG response');
       return response;
     } catch (error) {
@@ -108,7 +111,6 @@ Response:
       const highScore = results
         .filter(([_, score]) => score > msgScore)
         .map(([doc]) => doc);
-      console.log('HIGH SCORE RESULTS COUNT:', highScore.length);
       return highScore;
       // const results = await this.vectorStore.similaritySearch(query, limit);
       // return results;
