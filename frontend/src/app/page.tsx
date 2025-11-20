@@ -1,29 +1,28 @@
 "use client";
 
+import { ChatProvider, useChat } from "@/contexts/ChatContext";
 import {
-  MainContainer,
-  ChatContainer,
-  MessageList,
-  Message,
-  MessageInput,
-  TypingIndicator,
-  ConversationHeader,
-  Sidebar,
-  ConversationList,
-  Conversation,
-  Avatar,
-} from "@chatscope/chat-ui-kit-react";
-import "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
-import { useState, useEffect } from "react";
-import {
-  useConversations,
   useConversation,
-  useOptimisticAddMessage,
+  useConversations,
   useCreateConversation,
   useEditConversation,
+  useOptimisticAddMessage,
 } from "@/hooks/useConversations";
-import { ChatProvider, useChat } from "@/contexts/ChatContext";
 import { Message as MessageType } from "@/types/api";
+import {
+  Avatar,
+  ChatContainer,
+  Conversation,
+  ConversationHeader,
+  ConversationList,
+  MainContainer,
+  Message,
+  MessageInput,
+  MessageList,
+  Sidebar,
+} from "@chatscope/chat-ui-kit-react";
+import "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
+import { useState } from "react";
 
 function ChatInterface() {
   const { activeConversationId, setActiveConversationId } = useChat();

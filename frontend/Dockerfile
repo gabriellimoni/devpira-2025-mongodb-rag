@@ -22,7 +22,7 @@ FROM node:22-alpine AS runner
 WORKDIR /app
 
 # Set environment variables for Next.js production
-ENV NODE_ENV production
+ENV NODE_ENV=production
 
 # Copy the standalone output from the builder stage
 COPY --from=builder /app/.next ./
